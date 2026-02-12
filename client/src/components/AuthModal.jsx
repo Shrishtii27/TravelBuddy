@@ -17,14 +17,17 @@ export default function AuthModal({ triggerLabel = 'Login / Get Started' }) {
   });
 
   const handleGoogle = () => {
-  const BASE_URL =
-    import.meta.env.VITE_API_BASE_URL ||
-    (import.meta.env.PROD
-      ? 'https://travelbuddybak.onrender.com'
-      : 'http://localhost:8000');
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  if (!BASE_URL) {
+    console.error("VITE_API_BASE_URL is NOT defined!");
+    alert("Production API URL not configured.");
+    return;
+  }
 
   window.location.href = `${BASE_URL}/api/auth/google`;
 };
+
 
 
   const handleInputChange = (e) => {
