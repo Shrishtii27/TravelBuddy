@@ -17,10 +17,17 @@ export default function AuthModal({ triggerLabel = 'Login / Get Started' }) {
   });
 
   const handleGoogle = () => {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-    console.log('🔗 Redirecting to Google OAuth:', `${apiUrl}/api/auth/google`);
-    window.location.href = `${apiUrl}/api/auth/google`;
-  };
+  const BASE_URL =
+    import.meta.env.VITE_API_BASE_URL ||
+    (import.meta.env.PROD
+      ? 'https://travelbuddybak.onrender.com'
+      : 'http://localhost:8000');
+
+  console.log('🔗 Redirecting to Google OAuth:', `${BASE_URL}/api/auth/google`);
+
+  window.location.href = `${BASE_URL}/api/auth/google`;
+};
+
 
   const handleInputChange = (e) => {
     setFormData(prev => ({
