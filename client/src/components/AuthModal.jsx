@@ -23,8 +23,6 @@ export default function AuthModal({ triggerLabel = 'Login / Get Started' }) {
       ? 'https://travelbuddybak.onrender.com'
       : 'http://localhost:8000');
 
-  console.log('🔗 Redirecting to Google OAuth:', `${BASE_URL}/api/auth/google`);
-
   window.location.href = `${BASE_URL}/api/auth/google`;
 };
 
