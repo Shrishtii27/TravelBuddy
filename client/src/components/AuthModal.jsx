@@ -16,18 +16,18 @@ export default function AuthModal({ triggerLabel = 'Login / Get Started' }) {
     firstName: ''
   });
 
-  const handleGoogle = () => {
+ const handleGoogle = () => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+  console.log("ENV VALUE:", BASE_URL);
+
   if (!BASE_URL) {
-    console.error("VITE_API_BASE_URL is NOT defined!");
-    alert("Production API URL not configured.");
+    alert("API URL is not configured in Vercel!");
     return;
   }
 
   window.location.href = `${BASE_URL}/api/auth/google`;
 };
-
 
 
   const handleInputChange = (e) => {
