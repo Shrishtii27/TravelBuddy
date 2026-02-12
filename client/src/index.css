@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== Root Theme ===== */
+:root {
+  color-scheme: light;
+}
+
+/* ===== Base Styles ===== */
+body {
+  @apply bg-background text-foreground antialiased transition-colors duration-300 font-sans;
+}
+
+/* ===== Container ===== */
+.container {
+  @apply mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* ===== Heading Styles ===== */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-semibold tracking-tight text-gray-900;
+}
+
+/* ===== Links ===== */
+a {
+  @apply text-primary hover:text-primary-dark transition-colors duration-200;
+}
+
+/* ===== Buttons ===== */
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-white font-medium shadow-soft hover:bg-primary-dark transition-all duration-300;
+}
+
+.btn-outline {
+  @apply inline-flex items-center justify-center rounded-xl border border-primary text-primary px-5 py-2.5 font-medium hover:bg-primary hover:text-white transition-all duration-300;
+}
+
+/* ===== Navbar Styling ===== */
+.nav-link {
+  @apply text-gray-600 hover:text-primary font-medium transition-colors duration-200;
+}
+
+/* ===== Hero Section (for your LandingPage) ===== */
+.hero-title {
+  @apply text-5xl sm:text-6xl font-bold text-gray-900 leading-tight;
+}
+
+.hero-subtitle {
+  @apply mt-4 text-lg text-gray-600 max-w-2xl;
+}
+
+/* ===== Card Style ===== */
+.card {
+  @apply bg-white rounded-2xl shadow-card p-6 hover:shadow-soft transition-shadow duration-300;
+}
