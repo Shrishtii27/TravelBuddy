@@ -8,6 +8,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import api from '../lib/api';
+import { API_BASE_URL } from '../config';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -76,7 +77,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/api/auth/google`;
+    window.location.href = `${API_BASE_URL}/api/auth/google`;
   };
 
   return (

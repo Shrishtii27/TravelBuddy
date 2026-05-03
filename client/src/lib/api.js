@@ -1,14 +1,9 @@
 import axios from 'axios'
 
-// Determine base URL safely
-const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.PROD
-    ? 'https://travelbuddybak.onrender.com'
-    : 'http://localhost:8001')
+import { API_BASE_URL } from '../config'
 
 const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
