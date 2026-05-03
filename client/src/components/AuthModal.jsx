@@ -52,9 +52,9 @@ export default function AuthModal({ triggerLabel = 'Login / Get Started' }) {
       });
 
       if (response.data.token) {
-        localStorage.setItem('travys_token', response.data.token);
-        localStorage.setItem('travys_user', JSON.stringify(response.data.user));
-        localStorage.setItem('travys_auth', '1');
+        sessionStorage.setItem('travys_token', response.data.token);
+        sessionStorage.setItem('travys_user', JSON.stringify(response.data.user));
+        sessionStorage.setItem('travys_auth', '1');
         toast.success('Login successful!');
         setOpen(false);
         window.location.href = '/app/dashboard';
@@ -82,9 +82,9 @@ export default function AuthModal({ triggerLabel = 'Login / Get Started' }) {
       });
 
       if (response.data.token) {
-        localStorage.setItem('travys_token', response.data.token);
-        localStorage.setItem('travys_user', JSON.stringify(response.data.user));
-        localStorage.setItem('travys_auth', '1');
+        sessionStorage.setItem('travys_token', response.data.token);
+        sessionStorage.setItem('travys_user', JSON.stringify(response.data.user));
+        sessionStorage.setItem('travys_auth', '1');
         toast.success('Account created successfully!');
         setOpen(false);
         window.location.href = '/app/dashboard';

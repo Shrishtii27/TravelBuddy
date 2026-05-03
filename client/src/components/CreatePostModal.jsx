@@ -6,7 +6,7 @@ import { Label } from './ui/label';
 import toast from 'react-hot-toast';
 import { cn } from '../lib/utils';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
 
 export default function CreatePostModal({ isOpen, onClose, onPostCreated }) {
   const [title, setTitle] = useState('');
@@ -29,7 +29,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }) {
 
   const fetchUserTrips = async () => {
     try {
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       const response = await fetch(`${API_URL}/api/trips`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -88,7 +88,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }) {
         formData.append('images', file);
       });
 
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       const response = await fetch(`${API_URL}/api/upload/images`, {
         method: 'POST',
         headers: {
@@ -130,7 +130,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }) {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       const response = await fetch(`${API_URL}/api/posts`, {
         method: 'POST',
         headers: {

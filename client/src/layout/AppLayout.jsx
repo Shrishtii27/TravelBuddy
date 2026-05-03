@@ -10,7 +10,7 @@ export default function AppLayout() {
   const [currentUser, setCurrentUser] = React.useState(null);
 
   React.useEffect(() => {
-    const userStr = localStorage.getItem('travys_user');
+    const userStr = sessionStorage.getItem('travys_user');
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
@@ -25,7 +25,7 @@ export default function AppLayout() {
   // Listen for storage changes (when user logs in)
   React.useEffect(() => {
     const handleStorageChange = () => {
-      const userStr = localStorage.getItem('travys_user');
+      const userStr = sessionStorage.getItem('travys_user');
       if (userStr) {
         try {
           const user = JSON.parse(userStr);
@@ -51,9 +51,9 @@ export default function AppLayout() {
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem('travys_auth');
-    localStorage.removeItem('travys_token');
-    localStorage.removeItem('travys_user');
+    sessionStorage.removeItem('travys_auth');
+    sessionStorage.removeItem('travys_token');
+    sessionStorage.removeItem('travys_user');
     toast.success('Logout successful!');
     window.location.replace('/');
   };

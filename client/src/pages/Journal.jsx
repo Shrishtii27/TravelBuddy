@@ -6,7 +6,7 @@ import JournalCard from '../components/journal/JournalCard';
 import JournalModal from '../components/journal/JournalModal';
 import toast from 'react-hot-toast';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
 
 export default function Journal() {
   const [journals, setJournals] = useState([]);
@@ -19,7 +19,7 @@ export default function Journal() {
 
   useEffect(() => {
     // Get current user
-    const userStr = localStorage.getItem('travys_user');
+    const userStr = sessionStorage.getItem('travys_user');
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
@@ -37,7 +37,7 @@ export default function Journal() {
   const fetchUserJournals = async (userId) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       
       if (!token) {
         toast.error('Please login to view journals');
@@ -96,7 +96,7 @@ export default function Journal() {
     }
 
     try {
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       const response = await fetch(`${API_URL}/api/journal/${journalId}`, {
         method: 'DELETE',
         headers: {

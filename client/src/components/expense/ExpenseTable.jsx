@@ -4,7 +4,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import toast from 'react-hot-toast';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
 
 const CATEGORIES = [
   'All Categories',
@@ -73,7 +73,7 @@ export default function ExpenseTable({ expenses, onEdit, onDelete, onExpensesUpd
     }
 
     try {
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       const response = await fetch(`${API_URL}/api/expenses/${id}`, {
         method: 'DELETE',
         headers: {

@@ -37,8 +37,8 @@ export default function HeroSection() {
   }, []);
 
   const checkAuthState = () => {
-    const token = localStorage.getItem('travys_token');
-    const userStr = localStorage.getItem('travys_user');
+    const token = sessionStorage.getItem('travys_token');
+    const userStr = sessionStorage.getItem('travys_user');
     
     if (token && userStr) {
       try {
@@ -57,8 +57,8 @@ export default function HeroSection() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('travys_token');
-    localStorage.removeItem('travys_user');
+    sessionStorage.removeItem('travys_token');
+    sessionStorage.removeItem('travys_user');
     setIsLoggedIn(false);
     setCurrentUser(null);
     toast.success('Logged out successfully!');
@@ -96,88 +96,85 @@ export default function HeroSection() {
 
       {/* Top Navigation Bar */}
       <motion.nav 
-        className="absolute top-0 left-0 right-0 z-20 bg-white/10 backdrop-blur-md border-b border-white/20"
+        className="absolute top-0 left-0 right-0 z-50 bg-white/10 backdrop-blur-md border-b border-white/20"
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.6 }}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="bg-white rounded-lg p-2 shadow-lg">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 group">
+              <div className="bg-white rounded-xl p-2 shadow-lg transition-transform group-hover:scale-105">
                 <MapPin className="w-6 h-6 text-rose-600" />
               </div>
-              <span className="text-2xl font-extrabold text-white tracking-tight">TravelBUDDY</span>
+              <span className="text-2xl font-bold text-white tracking-tight">TravelBUDDY</span>
             </Link>
             
+            {/* Nav Links */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-white font-medium hover:text-white/80 transition-colors">Features</a>
-              <a href="#popular" className="text-white font-medium hover:text-white/80 transition-colors">Destinations</a>
-              <a href="#about" className="text-white font-medium hover:text-white/80 transition-colors">About</a>
-              {isLoggedIn && (
-                <button 
-                  onClick={handleDashboardClick}
-                  className="text-white font-medium hover:text-white/80 transition-colors"
-                >
-                  Dashboard
-                </button>
-              )}
+              <a href="#features" className="text-white/90 font-medium hover:text-white transition-colors">Features</a>
+              <a href="#popular" className="text-white/90 font-medium hover:text-white transition-colors">Destinations</a>
+              <a href="#footer" className="text-white/90 font-medium hover:text-white transition-colors">About</a>
             </div>
 
-            {isLoggedIn ? (
-              <div className="flex items-center gap-3">
-                {/* User Profile Display */}
-                <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
-                  {currentUser?.profilePicture ? (
-                    <img
-                      src={currentUser.profilePicture}
-                      alt={currentUser.firstName || 'User'}
-                      className="h-8 w-8 rounded-full object-cover border-2 border-white"
-                    />
-                  ) : (
-                    <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center border-2 border-white">
-                      <span className="text-white font-bold text-sm">
-                        {currentUser?.firstName?.charAt(0)?.toUpperCase() || 'U'}
-                      </span>
-                    </div>
-                  )}
-                  <span className="text-white font-medium text-sm">
-                    {currentUser?.firstName || 'User'}
-                  </span>
+            {/* Auth Actions */}
+            <div className="flex items-center gap-3">
+              {isLoggedIn ? (
+                <div className="flex items-center gap-3">
+                  {/* User Profile Pill */}
+                  <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+                    {currentUser?.profilePicture ? (
+                      <img
+                        src={currentUser.profilePicture}
+                        alt={currentUser.firstName || 'User'}
+                        className="h-7 w-7 rounded-full object-cover border border-white/50"
+                      />
+                    ) : (
+                      <div className="h-7 w-7 rounded-full bg-rose-500 flex items-center justify-center border border-white/50">
+                        <span className="text-white font-bold text-xs">
+                          {currentUser?.firstName?.charAt(0)?.toUpperCase() || 'U'}
+                        </span>
+                      </div>
+                    )}
+                    <span className="text-white font-medium text-sm">
+                      {currentUser?.firstName || 'User'}
+                    </span>
+                  </div>
+
+                  {/* Dashboard Button */}
+                  <Button 
+                    onClick={handleDashboardClick}
+                    className="bg-white text-rose-600 hover:bg-white/90 shadow-md font-semibold rounded-xl h-10 px-5"
+                  >
+                    Dashboard
+                  </Button>
+
+                  {/* Logout Button */}
+                  <Button 
+                    onClick={handleLogout}
+                    variant="ghost" 
+                    className="text-white/80 hover:text-white hover:bg-white/10 font-medium h-10"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
                 </div>
-
-                {/* Dashboard Button */}
-                <Button 
-                  onClick={handleDashboardClick}
-                  className="bg-white text-rose-600 hover:bg-white/90 shadow-lg font-semibold"
-                >
-                  Dashboard
-                </Button>
-
-                {/* Logout Button */}
-                <Button 
-                  onClick={handleLogout}
-                  variant="ghost" 
-                  className="text-white border-white/30 hover:bg-white/10"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <Link to="/login">
-                  <Button variant="ghost" className="text-white border-white/30 hover:bg-white/10">
-                    Login
-                  </Button>
-                </Link>
-                <Link to="/signup">
-                  <Button className="bg-white text-rose-600 hover:bg-white/90 shadow-lg font-semibold">
-                    Get Started
-                  </Button>
-                </Link>
-              </div>
-            )}
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Link to="/login">
+                    <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 font-medium">
+                      Login
+                    </Button>
+                  </Link>
+                  <Link to="/signup">
+                    <Button className="bg-white text-rose-600 hover:bg-white/90 shadow-md font-semibold rounded-xl px-6">
+                      Get Started
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </motion.nav>
@@ -214,8 +211,8 @@ export default function HeroSection() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <Link to="/signup">
-                <Button size="lg" className="bg-white text-rose-600 hover:bg-yellow-200 hover:text-rose-700 shadow-2xl font-bold text-lg px-8 py-6 h-auto">
+              <Link to={isLoggedIn ? "/app/dashboard" : "/signup"}>
+                <Button size="lg" className="bg-white text-rose-600 hover:bg-white/90 shadow-2xl font-bold text-lg px-8 py-6 h-auto transition-transform hover:scale-105 active:scale-95">
                   <Sparkles className="w-5 h-5 mr-2" />
                   Plan Your Trip Now
                 </Button>

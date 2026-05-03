@@ -14,7 +14,7 @@ export default function LoggedInDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userData = localStorage.getItem('travys_user');
+    const userData = sessionStorage.getItem('travys_user');
     if (userData) {
       setUser(JSON.parse(userData));
     }
@@ -26,9 +26,9 @@ export default function LoggedInDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('travys_token');
-    localStorage.removeItem('travys_user');
-    localStorage.removeItem('travys_auth');
+    sessionStorage.removeItem('travys_token');
+    sessionStorage.removeItem('travys_user');
+    sessionStorage.removeItem('travys_auth');
     toast.success('Logout successful!');
     window.location.href = '/';
   };

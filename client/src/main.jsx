@@ -55,7 +55,7 @@ const ProtectedRoute = ({ children }) => {
   React.useEffect(() => {
     const checkAuth = () => {
       try {
-        const token = localStorage.getItem('travys_token')
+        const token = sessionStorage.getItem('travys_token')
         console.debug('[ProtectedRoute] token present?', Boolean(token))
         if (!token) {
           setIsAuth(false)
@@ -75,15 +75,15 @@ const ProtectedRoute = ({ children }) => {
         console.debug('[ProtectedRoute] token exp:', payload.exp, 'isValid:', isValid)
         setIsAuth(isValid)
         if (!isValid) {
-          localStorage.removeItem('travys_token')
-          localStorage.removeItem('travys_user')
-          localStorage.removeItem('travys_auth')
+          sessionStorage.removeItem('travys_token')
+          sessionStorage.removeItem('travys_user')
+          sessionStorage.removeItem('travys_auth')
         }
       } catch (e) {
         console.error('[ProtectedRoute] error while checking token', e)
-        localStorage.removeItem('travys_token')
-        localStorage.removeItem('travys_user')
-        localStorage.removeItem('travys_auth')
+        sessionStorage.removeItem('travys_token')
+        sessionStorage.removeItem('travys_user')
+        sessionStorage.removeItem('travys_auth')
         setIsAuth(false)
       }
       setLoading(false)

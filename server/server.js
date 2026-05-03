@@ -1,6 +1,7 @@
 import express from 'express'
 import dotenv from 'dotenv'
 import cors from 'cors'
+import helmet from 'helmet'
 import passport from 'passport'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -9,7 +10,7 @@ import { fileURLToPath } from 'url'
 dotenv.config()
 
 import './config/passport.js'
-import connectDB from './config/db.js'
+import { connectPostgres } from './config/postgres.js'
 import authRoutes from './routes/authRoutes.js'
 import tripRoutes from './routes/tripRoutes.js'
 import expenseRoutes from './routes/expenseRoutes.js'
@@ -24,12 +25,18 @@ const __dirname = path.dirname(__filename)
 
 const app = express()
 const PORT = process.env.PORT || 8000
-const ORIGIN = process.env.FRONTEND_URL || 'http://localhost:5175'
+const ORIGIN = process.env.FRONTEND_URL || 'http://localhost:5176'
 
 console.log('🔧 Setting up server...')
 
 // Middleware
-app.use(cors({ origin: ORIGIN, credentials: true }))
+app.use(helmet())
+app.use(cors({ 
+  origin: ORIGIN, 
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}))
 app.use(express.json())
 app.use(passport.initialize())
 
@@ -56,12 +63,11 @@ app.use('/api/journal', journalRoutes);
 // Start server
 async function startServer() {
   try {
-    console.log('🔗 Connecting to MongoDB...')
-    await connectDB()
-    console.log('✅ MongoDB connected successfully')
+    console.log('🔗 Connecting to PostgreSQL...')
+    await connectPostgres()
   } catch (error) {
-    console.error('❌ MongoDB connection failed:', error.message)
-    console.log('⚠️  Starting server without database connection...')
+    console.error('❌ PostgreSQL connection failed:', error.message)
+    console.log('⚠️  Starting server without PostgreSQL connection...')
   }
   
   const server = app.listen(PORT, () => {
@@ -75,7 +81,7 @@ async function startServer() {
     if (err.code === 'EADDRINUSE') {
       console.log(`\n❌ ERROR: Port ${PORT} is already in use!`)
       console.log('\n🔧 To fix this, run one of these commands:')
-      console.log('   • lsof -ti:8000 | xargs kill -9')
+      console.log('   • lsof -ti:8001 | xargs kill -9')
       console.log('   • pkill -f "node.*server"')
       console.log('   • Or change PORT in .env file\n')
       process.exit(1)

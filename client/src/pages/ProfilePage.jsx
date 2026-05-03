@@ -5,7 +5,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import toast from 'react-hot-toast';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
@@ -25,7 +25,7 @@ export default function ProfilePage() {
 
   const fetchUserProfile = async () => {
     try {
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       if (!token) {
         toast.error('Please login to view your profile');
         return;
@@ -67,7 +67,7 @@ export default function ProfilePage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       const response = await fetch(`${API_URL}/api/auth/profile`, {
         method: 'PATCH',
         headers: {
@@ -81,8 +81,8 @@ export default function ProfilePage() {
         const data = await response.json();
         setUser(data.user);
         
-        // Update localStorage
-        localStorage.setItem('travys_user', JSON.stringify(data.user));
+        // Update sessionStorage
+        sessionStorage.setItem('travys_user', JSON.stringify(data.user));
         
         toast.success('Profile updated successfully!');
         setIsEditing(false);

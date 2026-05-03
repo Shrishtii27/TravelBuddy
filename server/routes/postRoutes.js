@@ -1,7 +1,5 @@
 import express from 'express';
-import Post from '../models/PostModel.js';
-import User from '../models/UserModel.js';
-import Itinerary from '../models/ItineraryModel.js';
+import pool from '../config/postgres.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -11,35 +9,49 @@ router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+    const offset = (page - 1) * limit;
     const destination = req.query.destination;
     const tag = req.query.tag;
     const search = req.query.search;
 
-    let query = {};
+    let queryText = 'SELECT p.*, u.first_name, u.last_name, u.profile_picture, u.email as author_email, ' +
+                    '(SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as likes_count, ' +
+                    '(SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comments_count ' +
+                    'FROM posts p JOIN users u ON p.user_id = u.id WHERE 1=1';
+    let queryParams = [];
 
-    // Filter by destination
     if (destination) {
-      query.destination = new RegExp(destination, 'i');
+      queryParams.push(`%${destination}%`);
+      queryText += ` AND p.destination ILIKE $${queryParams.length}`;
     }
 
-    // Filter by tag
     if (tag) {
-      query.tags = tag;
+      queryParams.push(tag);
+      queryText += ` AND p.tags @> jsonb_build_array(CAST($${queryParams.length} AS text))`;
     }
 
-    // Search in title, content, destination
     if (search) {
-      query.$text = { $search: search };
+      queryParams.push(`%${search}%`);
+      queryText += ` AND (p.title ILIKE $${queryParams.length} OR p.content ILIKE $${queryParams.length} OR p.destination ILIKE $${queryParams.length})`;
     }
 
-    const posts = await Post.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    queryText += ` ORDER BY p.created_at DESC LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`;
+    queryParams.push(limit, offset);
 
-    const total = await Post.countDocuments(query);
+    const result = await pool.query(queryText, queryParams);
+    const posts = result.rows.map(post => ({
+      ...post,
+      author: {
+        name: `${post.first_name} ${post.last_name || ''}`.trim() || post.author_email,
+        email: post.author_email,
+        profilePicture: post.profile_picture
+      },
+      likesCount: parseInt(post.likes_count),
+      commentsCount: parseInt(post.comments_count)
+    }));
+
+    const totalResult = await pool.query('SELECT COUNT(*) FROM posts');
+    const total = parseInt(totalResult.rows[0].count);
 
     res.json({
       success: true,
@@ -48,7 +60,7 @@ router.get('/', async (req, res) => {
         currentPage: page,
         totalPages: Math.ceil(total / limit),
         totalPosts: total,
-        hasMore: skip + posts.length < total
+        hasMore: offset + posts.length < total
       }
     });
   } catch (error) {
@@ -60,10 +72,18 @@ router.get('/', async (req, res) => {
 // Get featured posts
 router.get('/featured', async (req, res) => {
   try {
-    const posts = await Post.find({ featured: true })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .lean();
+    const result = await pool.query(
+      'SELECT p.*, u.first_name, u.last_name, u.profile_picture, u.email as author_email FROM posts p JOIN users u ON p.user_id = u.id WHERE p.featured = true ORDER BY p.created_at DESC LIMIT 5'
+    );
+    
+    const posts = result.rows.map(post => ({
+      ...post,
+      author: {
+        name: `${post.first_name} ${post.last_name || ''}`.trim() || post.author_email,
+        email: post.author_email,
+        profilePicture: post.profile_picture
+      }
+    }));
 
     res.json({ success: true, posts });
   } catch (error) {
@@ -75,9 +95,19 @@ router.get('/featured', async (req, res) => {
 // Get user's own posts
 router.get('/my-posts', authenticateToken, async (req, res) => {
   try {
-    const posts = await Post.find({ userId: req.user.id })
-      .sort({ createdAt: -1 })
-      .lean();
+    const result = await pool.query(
+      'SELECT p.*, u.first_name, u.last_name, u.profile_picture, u.email as author_email FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = $1 ORDER BY p.created_at DESC',
+      [req.user.id]
+    );
+
+    const posts = result.rows.map(post => ({
+      ...post,
+      author: {
+        name: `${post.first_name} ${post.last_name || ''}`.trim() || post.author_email,
+        email: post.author_email,
+        profilePicture: post.profile_picture
+      }
+    }));
 
     res.json({ success: true, posts });
   } catch (error) {
@@ -89,17 +119,44 @@ router.get('/my-posts', authenticateToken, async (req, res) => {
 // Get single post by ID
 router.get('/:id', async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const result = await pool.query(
+      'SELECT p.*, u.first_name, u.last_name, u.profile_picture, u.email as author_email FROM posts p JOIN users u ON p.user_id = u.id WHERE p.id = $1',
+      [req.params.id]
+    );
 
+    const post = result.rows[0];
     if (!post) {
       return res.status(404).json({ success: false, message: 'Post not found' });
     }
 
     // Increment view count
-    post.viewCount += 1;
-    await post.save();
+    await pool.query('UPDATE posts SET view_count = view_count + 1 WHERE id = $1', [post.id]);
 
-    res.json({ success: true, post });
+    // Fetch comments
+    const commentsResult = await pool.query(
+      'SELECT c.*, u.first_name, u.last_name, u.profile_picture FROM comments c JOIN users u ON c.user_id = u.id WHERE c.post_id = $1 ORDER BY c.created_at ASC',
+      [post.id]
+    );
+
+    res.json({ 
+      success: true, 
+      post: {
+        ...post,
+        author: {
+          name: `${post.first_name} ${post.last_name || ''}`.trim() || post.author_email,
+          email: post.author_email,
+          profilePicture: post.profile_picture
+        },
+        comments: commentsResult.rows.map(c => ({
+          id: c.id,
+          userId: c.user_id,
+          userName: `${c.first_name} ${c.last_name || ''}`.trim(),
+          userPhoto: c.profile_picture,
+          content: c.content,
+          createdAt: c.created_at
+        }))
+      } 
+    });
   } catch (error) {
     console.error('Error fetching post:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch post' });
@@ -111,35 +168,15 @@ router.post('/', authenticateToken, async (req, res) => {
   try {
     const { title, content, destination, tags, images, itineraryId, tripId } = req.body;
 
-    // Get user info
-    const user = await User.findById(req.user.id).select('firstName lastName email profilePicture');
+    const result = await pool.query(
+      'INSERT INTO posts (user_id, title, content, destination, tags, images, itinerary_id, trip_id) ' +
+      'VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [req.user.id, title, content, destination, JSON.stringify(tags || []), JSON.stringify(images || []), itineraryId || null, tripId || null]
+    );
 
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    const post = new Post({
-      userId: req.user.id,
-      author: {
-        name: `${user.firstName} ${user.lastName || ''}`.trim() || user.email,
-        email: user.email,
-        profilePicture: user.profilePicture
-      },
-      title,
-      content,
-      destination,
-      tags: tags || [],
-      images: images || [],
-      itineraryId,
-      tripId
-    });
-
-    await post.save();
-
-    // Create notification for the user
     res.status(201).json({ 
       success: true, 
-      post,
+      post: result.rows[0],
       message: 'Post created successfully!' 
     });
   } catch (error) {
@@ -153,23 +190,20 @@ router.patch('/:id', authenticateToken, async (req, res) => {
   try {
     const { title, content, destination, tags, images } = req.body;
 
-    const post = await Post.findOne({ _id: req.params.id, userId: req.user.id });
+    const result = await pool.query(
+      'UPDATE posts SET title = COALESCE($1, title), content = COALESCE($2, content), ' +
+      'destination = COALESCE($3, destination), tags = COALESCE($4, tags), images = COALESCE($5, images), ' +
+      'updated_at = CURRENT_TIMESTAMP WHERE id = $6 AND user_id = $7 RETURNING *',
+      [title, content, destination, tags ? JSON.stringify(tags) : null, images ? JSON.stringify(images) : null, req.params.id, req.user.id]
+    );
 
-    if (!post) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Post not found or unauthorized' });
     }
 
-    if (title !== undefined) post.title = title;
-    if (content !== undefined) post.content = content;
-    if (destination !== undefined) post.destination = destination;
-    if (tags !== undefined) post.tags = tags;
-    if (images !== undefined) post.images = images;
-
-    await post.save();
-
     res.json({ 
       success: true, 
-      post,
+      post: result.rows[0],
       message: 'Post updated successfully!' 
     });
   } catch (error) {
@@ -181,19 +215,16 @@ router.patch('/:id', authenticateToken, async (req, res) => {
 // Delete a post
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    const post = await Post.findOneAndDelete({ 
-      _id: req.params.id, 
-      userId: req.user.id 
-    });
+    const result = await pool.query(
+      'DELETE FROM posts WHERE id = $1 AND user_id = $2 RETURNING id',
+      [req.params.id, req.user.id]
+    );
 
-    if (!post) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Post not found or unauthorized' });
     }
 
-    res.json({ 
-      success: true, 
-      message: 'Post deleted successfully!' 
-    });
+    res.json({ success: true, message: 'Post deleted successfully!' });
   } catch (error) {
     console.error('Error deleting post:', error);
     res.status(500).json({ success: false, message: 'Failed to delete post' });
@@ -203,33 +234,21 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 // Like/Unlike a post
 router.post('/:id/like', authenticateToken, async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const checkResult = await pool.query(
+      'SELECT * FROM post_likes WHERE post_id = $1 AND user_id = $2',
+      [req.params.id, req.user.id]
+    );
 
-    if (!post) {
-      return res.status(404).json({ success: false, message: 'Post not found' });
-    }
-
-    const userIdStr = req.user.id.toString();
-    const likeIndex = post.likes.findIndex(id => id.toString() === userIdStr);
-
-    if (likeIndex > -1) {
+    if (checkResult.rows.length > 0) {
       // Unlike
-      post.likes.splice(likeIndex, 1);
-      await post.save();
-      res.json({ 
-        success: true, 
-        liked: false, 
-        likesCount: post.likes.length 
-      });
+      await pool.query('DELETE FROM post_likes WHERE post_id = $1 AND user_id = $2', [req.params.id, req.user.id]);
+      const countResult = await pool.query('SELECT COUNT(*) FROM post_likes WHERE post_id = $1', [req.params.id]);
+      res.json({ success: true, liked: false, likesCount: parseInt(countResult.rows[0].count) });
     } else {
       // Like
-      post.likes.push(req.user.id);
-      await post.save();
-      res.json({ 
-        success: true, 
-        liked: true, 
-        likesCount: post.likes.length 
-      });
+      await pool.query('INSERT INTO post_likes (post_id, user_id) VALUES ($1, $2)', [req.params.id, req.user.id]);
+      const countResult = await pool.query('SELECT COUNT(*) FROM post_likes WHERE post_id = $1', [req.params.id]);
+      res.json({ success: true, liked: true, likesCount: parseInt(countResult.rows[0].count) });
     }
   } catch (error) {
     console.error('Error toggling like:', error);
@@ -246,28 +265,21 @@ router.post('/:id/comments', authenticateToken, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Comment content is required' });
     }
 
-    const post = await Post.findById(req.params.id);
+    const result = await pool.query(
+      'INSERT INTO comments (post_id, user_id, content) VALUES ($1, $2, $3) RETURNING *',
+      [req.params.id, req.user.id, content.trim()]
+    );
 
-    if (!post) {
-      return res.status(404).json({ success: false, message: 'Post not found' });
-    }
-
-    // Get user info
-    const user = await User.findById(req.user.id).select('firstName lastName profilePicture');
-
-    const comment = {
-      userId: req.user.id,
-      userName: `${user.firstName} ${user.lastName || ''}`.trim() || 'User',
-      userPhoto: user.profilePicture,
-      content: content.trim()
-    };
-
-    post.comments.push(comment);
-    await post.save();
+    const userResult = await pool.query('SELECT first_name, last_name, profile_picture FROM users WHERE id = $1', [req.user.id]);
+    const user = userResult.rows[0];
 
     res.status(201).json({ 
       success: true, 
-      comment: post.comments[post.comments.length - 1],
+      comment: {
+        ...result.rows[0],
+        userName: `${user.first_name} ${user.last_name || ''}`.trim(),
+        userPhoto: user.profile_picture
+      },
       message: 'Comment added successfully!' 
     });
   } catch (error) {
@@ -279,31 +291,16 @@ router.post('/:id/comments', authenticateToken, async (req, res) => {
 // Delete a comment
 router.delete('/:postId/comments/:commentId', authenticateToken, async (req, res) => {
   try {
-    const post = await Post.findById(req.params.postId);
+    const result = await pool.query(
+      'DELETE FROM comments WHERE id = $1 AND (user_id = $2 OR post_id IN (SELECT id FROM posts WHERE user_id = $2)) RETURNING id',
+      [req.params.commentId, req.user.id]
+    );
 
-    if (!post) {
-      return res.status(404).json({ success: false, message: 'Post not found' });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Comment not found or unauthorized' });
     }
 
-    const comment = post.comments.id(req.params.commentId);
-
-    if (!comment) {
-      return res.status(404).json({ success: false, message: 'Comment not found' });
-    }
-
-    // Check if user owns the comment or the post
-    if (comment.userId.toString() !== req.user.id.toString() && 
-        post.userId.toString() !== req.user.id.toString()) {
-      return res.status(403).json({ success: false, message: 'Unauthorized' });
-    }
-
-    post.comments.pull(req.params.commentId);
-    await post.save();
-
-    res.json({ 
-      success: true, 
-      message: 'Comment deleted successfully!' 
-    });
+    res.json({ success: true, message: 'Comment deleted successfully!' });
   } catch (error) {
     console.error('Error deleting comment:', error);
     res.status(500).json({ success: false, message: 'Failed to delete comment' });

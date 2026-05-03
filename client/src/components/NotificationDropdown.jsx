@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bell } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,7 +31,7 @@ export default function NotificationDropdown() {
 
   const fetchNotifications = async () => {
     try {
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       if (!token) return;
 
       const response = await fetch(`${API_URL}/api/notifications`, {
@@ -76,7 +76,7 @@ export default function NotificationDropdown() {
 
   const markAsRead = async (id) => {
     try {
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       if (!token) return;
 
       const response = await fetch(`${API_URL}/api/notifications/${id}/read`, {
@@ -99,7 +99,7 @@ export default function NotificationDropdown() {
 
   const markAllAsRead = async () => {
     try {
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       if (!token) return;
 
       const response = await fetch(`${API_URL}/api/notifications/mark-all-read`, {

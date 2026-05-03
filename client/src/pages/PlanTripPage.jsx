@@ -147,7 +147,7 @@ export default function PlanTripPage() {
 
     try {
       // Check if user is logged in
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       if (!token) {
         toast.error('Please log in to generate itinerary');
         navigate('/login');

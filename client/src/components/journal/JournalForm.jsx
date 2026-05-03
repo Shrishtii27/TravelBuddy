@@ -6,7 +6,7 @@ import { Label } from '../ui/label';
 import toast from 'react-hot-toast';
 import { cn } from '../../lib/utils';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
 
 export default function JournalForm({ onJournalCreated }) {
   const [title, setTitle] = useState('');
@@ -36,7 +36,7 @@ export default function JournalForm({ onJournalCreated }) {
         formData.append('images', file);
       });
 
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       const response = await fetch(`${API_URL}/api/journal/upload-images`, {
         method: 'POST',
         headers: {
@@ -99,7 +99,7 @@ export default function JournalForm({ onJournalCreated }) {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       const response = await fetch(`${API_URL}/api/journal/create`, {
         method: 'POST',
         headers: {

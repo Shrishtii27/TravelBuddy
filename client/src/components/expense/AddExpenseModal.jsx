@@ -5,7 +5,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import toast from 'react-hot-toast';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
 
 const CATEGORIES = [
   'Accommodation',
@@ -89,7 +89,7 @@ export default function AddExpenseModal({ isOpen, onClose, onExpenseAdded, editE
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       const url = editExpense 
         ? `${API_URL}/api/expenses/${editExpense._id}`
         : `${API_URL}/api/expenses`;

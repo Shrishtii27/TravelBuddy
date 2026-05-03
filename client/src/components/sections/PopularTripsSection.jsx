@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "../ui/card";
 import { Sparkles, MapPin, TrendingUp, Camera, Users, Shield, ArrowRight, Star, Heart } from "lucide-react";
 import { Button } from "../ui/button";
+import { useState, useEffect } from "react";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -109,7 +110,16 @@ const features = [
   },
 ];
 
+
 export default function PopularTripsSection() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem('travys_token');
+    const user = sessionStorage.getItem('travys_user');
+    setIsLoggedIn(!!(token && user));
+  }, []);
+
   return (
     <>
       {/* Features Section */}
@@ -163,9 +173,9 @@ export default function PopularTripsSection() {
           </motion.div>
 
           <div className="text-center mt-16">
-            <Link to="/signup">
-              <Button size="lg" className="bg-gradient-to-r from-rose-500 to-orange-500 text-white hover:from-rose-600 hover:to-orange-600 shadow-xl font-bold text-lg px-10 py-6 h-auto">
-                Get Started for Free
+            <Link to={isLoggedIn ? "/app/dashboard" : "/signup"}>
+              <Button size="lg" className="bg-gradient-to-r from-rose-500 to-orange-500 text-white hover:from-rose-600 hover:to-orange-600 shadow-xl font-bold text-lg px-10 py-6 h-auto transition-transform hover:scale-105">
+                {isLoggedIn ? "Go to Dashboard" : "Get Started for Free"}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>

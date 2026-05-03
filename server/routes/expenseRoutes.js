@@ -1,41 +1,43 @@
 import express from 'express'
-import Expense from '../models/ExpenseModel.js'
-import Trip from '../models/TripModel.js'
-import Notification from '../models/NotificationModel.js'
+import pool from '../config/postgres.js'
 import { authenticateToken } from '../middleware/auth.js'
 
 const router = express.Router()
 
-// Use centralized auth middleware that sets req.user
-const authenticateUser = (req, res, next) => {
-  authenticateToken(req, res, (err) => {
-    if (err) return next(err)
-    req.userId = req.user._id
-    next()
-  })
-}
-
 // GET /api/expenses - Get all expenses for logged-in user
-router.get('/', authenticateUser, async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const { tripId, category, startDate, endDate, limit = 50 } = req.query
     
-    let query = { userId: req.userId }
+    let queryText = 'SELECT e.*, t.name as trip_name, t.destination as trip_destination FROM expenses e LEFT JOIN trips t ON e.trip_id = t.id WHERE e.user_id = $1'
+    let queryParams = [req.user.id]
     
-    // Add filters if provided
-    if (tripId) query.tripId = tripId
-    if (category) query.category = category
-    if (startDate || endDate) {
-      query.date = {}
-      if (startDate) query.date.$gte = new Date(startDate)
-      if (endDate) query.date.$lte = new Date(endDate)
+    if (tripId) {
+      queryParams.push(tripId)
+      queryText += ` AND e.trip_id = $${queryParams.length}`
     }
+    if (category) {
+      queryParams.push(category)
+      queryText += ` AND e.category = $${queryParams.length}`
+    }
+    if (startDate) {
+      queryParams.push(new Date(startDate))
+      queryText += ` AND e.date >= $${queryParams.length}`
+    }
+    if (endDate) {
+      queryParams.push(new Date(endDate))
+      queryText += ` AND e.date <= $${queryParams.length}`
+    }
+    
+    queryText += ' ORDER BY e.date DESC LIMIT $' + (queryParams.length + 1)
+    queryParams.push(parseInt(limit))
 
-    const expenses = await Expense.find(query)
-      .populate('tripId', 'name destination')
-      .sort({ date: -1 })
-      .limit(parseInt(limit))
-      .lean()
+    const result = await pool.query(queryText, queryParams)
+    const expenses = result.rows.map(exp => ({
+      ...exp,
+      amount: parseFloat(exp.amount),
+      tripId: exp.trip_id ? { id: exp.trip_id, name: exp.trip_name, destination: exp.trip_destination } : null
+    }))
 
     res.json({ expenses })
   } catch (error) {
@@ -45,54 +47,37 @@ router.get('/', authenticateUser, async (req, res) => {
 })
 
 // GET /api/expenses/stats - Get expense statistics
-router.get('/stats', authenticateUser, async (req, res) => {
+router.get('/stats', authenticateToken, async (req, res) => {
   try {
     const { tripId } = req.query
     
-    let matchQuery = { userId: req.userId }
-    if (tripId) matchQuery.tripId = tripId
-
-    const stats = await Expense.aggregate([
-      { $match: matchQuery },
-      {
-        $group: {
-          _id: null,
-          totalAmount: { $sum: '$amount' },
-          totalExpenses: { $sum: 1 },
-          categoryBreakdown: {
-            $push: { category: '$category', amount: '$amount' }
-          }
-        }
-      }
-    ])
-
-    if (!stats.length) {
-      return res.json({
-        totalAmount: 0,
-        totalExpenses: 0,
-        categoryBreakdown: []
-      })
+    let queryText = 'SELECT category, SUM(amount) as amount FROM expenses WHERE user_id = $1'
+    let queryParams = [req.user.id]
+    
+    if (tripId) {
+      queryParams.push(tripId)
+      queryText += ` AND trip_id = $${queryParams.length}`
     }
+    
+    queryText += ' GROUP BY category'
 
-    // Process category breakdown
-    const categoryMap = {}
-    stats[0].categoryBreakdown.forEach(item => {
-      if (categoryMap[item.category]) {
-        categoryMap[item.category] += item.amount
-      } else {
-        categoryMap[item.category] = item.amount
-      }
-    })
+    const result = await pool.query(queryText, queryParams)
+    const categoryBreakdownData = result.rows.map(row => ({
+      category: row.category,
+      amount: parseFloat(row.amount)
+    }))
 
-    const categoryBreakdown = Object.entries(categoryMap).map(([category, amount]) => ({
-      category,
-      amount,
-      percentage: ((amount / stats[0].totalAmount) * 100).toFixed(1)
+    const totalAmount = categoryBreakdownData.reduce((sum, item) => sum + item.amount, 0)
+    const totalExpenses = result.rowCount
+
+    const categoryBreakdown = categoryBreakdownData.map(item => ({
+      ...item,
+      percentage: totalAmount > 0 ? ((item.amount / totalAmount) * 100).toFixed(1) : 0
     }))
 
     res.json({
-      totalAmount: stats[0].totalAmount,
-      totalExpenses: stats[0].totalExpenses,
+      totalAmount,
+      totalExpenses,
       categoryBreakdown
     })
   } catch (error) {
@@ -102,46 +87,21 @@ router.get('/stats', authenticateUser, async (req, res) => {
 })
 
 // POST /api/expenses - Create new expense
-router.post('/', authenticateUser, async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { title, spentBy, tripId, amount, category, description, date, paymentMethod } = req.body
 
-    // Validation
     if (!title || !spentBy || !amount || !category) {
       return res.status(400).json({ message: 'Missing required fields (title, spentBy, amount, category)' })
     }
 
-    if (amount <= 0) {
-      return res.status(400).json({ message: 'Amount must be greater than 0' })
-    }
+    const result = await pool.query(
+      'INSERT INTO expenses (user_id, trip_id, title, spent_by, amount, category, description, date, payment_method) ' +
+      'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+      [req.user.id, tripId || null, title.trim(), spentBy.trim(), parseFloat(amount), category, description?.trim() || '', date ? new Date(date) : new Date(), paymentMethod || 'card']
+    );
 
-    // If tripId provided, verify trip belongs to user
-    if (tripId) {
-      const trip = await Trip.findOne({ _id: tripId, userId: req.userId })
-      if (!trip) {
-        return res.status(404).json({ message: 'Trip not found' })
-      }
-    }
-
-    const expense = new Expense({
-      userId: req.userId,
-      title: title.trim(),
-      spentBy: spentBy.trim(),
-      tripId: tripId || undefined,
-      amount: parseFloat(amount),
-      category,
-      description: description ? description.trim() : '',
-      date: date ? new Date(date) : new Date(),
-      paymentMethod: paymentMethod || 'card'
-    })
-
-    await expense.save()
-    
-    // Populate trip info for response if tripId exists
-    if (tripId) {
-      await expense.populate('tripId', 'name destination')
-    }
-    
+    const expense = result.rows[0];
     res.status(201).json({ success: true, expense, message: 'Expense added successfully' })
   } catch (error) {
     console.error('Error creating expense:', error)
@@ -150,18 +110,25 @@ router.post('/', authenticateUser, async (req, res) => {
 })
 
 // GET /api/expenses/:id - Get specific expense
-router.get('/:id', authenticateUser, async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const expense = await Expense.findOne({ 
-      _id: req.params.id, 
-      userId: req.userId 
-    }).populate('tripId', 'name destination').lean()
+    const result = await pool.query(
+      'SELECT e.*, t.name as trip_name, t.destination as trip_destination FROM expenses e LEFT JOIN trips t ON e.trip_id = t.id WHERE e.id = $1 AND e.user_id = $2',
+      [req.params.id, req.user.id]
+    );
 
+    const expense = result.rows[0];
     if (!expense) {
       return res.status(404).json({ message: 'Expense not found' })
     }
 
-    res.json({ expense })
+    res.json({ 
+      expense: {
+        ...expense,
+        amount: parseFloat(expense.amount),
+        tripId: expense.trip_id ? { id: expense.trip_id, name: expense.trip_name, destination: expense.trip_destination } : null
+      }
+    })
   } catch (error) {
     console.error('Error fetching expense:', error)
     res.status(500).json({ message: 'Failed to fetch expense' })
@@ -169,34 +136,24 @@ router.get('/:id', authenticateUser, async (req, res) => {
 })
 
 // PUT /api/expenses/:id - Update expense
-router.put('/:id', authenticateUser, async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { title, spentBy, amount, category, description, date, paymentMethod } = req.body
 
-    const expense = await Expense.findOne({ 
-      _id: req.params.id, 
-      userId: req.userId 
-    })
+    const result = await pool.query(
+      'UPDATE expenses SET title = COALESCE($1, title), spent_by = COALESCE($2, spent_by), ' +
+      'amount = COALESCE($3, amount), category = COALESCE($4, category), ' +
+      'description = COALESCE($5, description), date = COALESCE($6, date), ' +
+      'payment_method = COALESCE($7, payment_method), updated_at = CURRENT_TIMESTAMP ' +
+      'WHERE id = $8 AND user_id = $9 RETURNING *',
+      [title?.trim(), spentBy?.trim(), amount ? parseFloat(amount) : null, category, description?.trim(), date ? new Date(date) : null, paymentMethod, req.params.id, req.user.id]
+    );
 
+    const expense = result.rows[0];
     if (!expense) {
       return res.status(404).json({ message: 'Expense not found' })
     }
 
-    // Update fields if provided
-    if (title) expense.title = title.trim()
-    if (spentBy) expense.spentBy = spentBy.trim()
-    if (amount) expense.amount = parseFloat(amount)
-    if (category) expense.category = category
-    if (description !== undefined) expense.description = description.trim()
-    if (date) expense.date = new Date(date)
-    if (paymentMethod) expense.paymentMethod = paymentMethod
-
-    await expense.save()
-    
-    if (expense.tripId) {
-      await expense.populate('tripId', 'name destination')
-    }
-    
     res.json({ success: true, expense, message: 'Expense updated successfully' })
   } catch (error) {
     console.error('Error updating expense:', error)
@@ -205,18 +162,17 @@ router.put('/:id', authenticateUser, async (req, res) => {
 })
 
 // DELETE /api/expenses/:id - Delete expense
-router.delete('/:id', authenticateUser, async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    const expense = await Expense.findOne({ 
-      _id: req.params.id, 
-      userId: req.userId 
-    })
+    const result = await pool.query(
+      'DELETE FROM expenses WHERE id = $1 AND user_id = $2 RETURNING id',
+      [req.params.id, req.user.id]
+    );
 
-    if (!expense) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Expense not found' })
     }
 
-    await Expense.deleteOne({ _id: expense._id })
     res.json({ message: 'Expense deleted successfully' })
   } catch (error) {
     console.error('Error deleting expense:', error)

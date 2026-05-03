@@ -6,7 +6,7 @@ import ExpenseTable from '../components/expense/ExpenseTable';
 import AddExpenseModal from '../components/expense/AddExpenseModal';
 import toast from 'react-hot-toast';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
 
 export default function ExpenseTracker() {
   const [expenses, setExpenses] = useState([]);
@@ -17,7 +17,7 @@ export default function ExpenseTracker() {
 
   useEffect(() => {
     // Get current user
-    const userStr = localStorage.getItem('travys_user');
+    const userStr = sessionStorage.getItem('travys_user');
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
@@ -36,7 +36,7 @@ export default function ExpenseTracker() {
   const fetchExpenses = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       
       if (!token) {
         toast.error('Please login to view expenses');

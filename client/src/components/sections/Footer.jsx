@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { MapPin, Mail, Phone, Facebook, Twitter, Instagram, Linkedin, Heart } from "lucide-react";
 
@@ -8,8 +9,15 @@ const fadeUp = {
 };
 
 export default function Footer() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem('travys_token');
+    const user = sessionStorage.getItem('travys_user');
+    setIsLoggedIn(!!(token && user));
+  }, []);
   return (
-    <footer className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+    <footer id="footer" className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12"
@@ -67,17 +75,19 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <Link to="/signup" className="text-slate-300 hover:text-rose-400 transition-colors flex items-center gap-2">
+                <Link to={isLoggedIn ? "/app/dashboard" : "/signup"} className="text-slate-300 hover:text-rose-400 transition-colors flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
-                  Get Started
+                  {isLoggedIn ? "Dashboard" : "Get Started"}
                 </Link>
               </li>
-              <li>
-                <Link to="/login" className="text-slate-300 hover:text-rose-400 transition-colors flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
-                  Login
-                </Link>
-              </li>
+              {!isLoggedIn && (
+                <li>
+                  <Link to="/login" className="text-slate-300 hover:text-rose-400 transition-colors flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
+                    Login
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
 

@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { cn } from '../lib/utils';
 import toast from 'react-hot-toast';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
 
 export default function PostCard({ post, onLike, onComment, onDelete, currentUserId }) {
   const [showComments, setShowComments] = useState(false);
@@ -18,7 +18,7 @@ export default function PostCard({ post, onLike, onComment, onDelete, currentUse
 
   const handleLike = async () => {
     try {
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       const response = await fetch(`${API_URL}/api/posts/${localPost._id}/like`, {
         method: 'POST',
         headers: {
@@ -48,7 +48,7 @@ export default function PostCard({ post, onLike, onComment, onDelete, currentUse
 
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       const response = await fetch(`${API_URL}/api/posts/${localPost._id}/comments`, {
         method: 'POST',
         headers: {
@@ -80,7 +80,7 @@ export default function PostCard({ post, onLike, onComment, onDelete, currentUse
     if (!confirm('Are you sure you want to delete this post?')) return;
 
     try {
-      const token = localStorage.getItem('travys_token');
+      const token = sessionStorage.getItem('travys_token');
       const response = await fetch(`${API_URL}/api/posts/${localPost._id}`, {
         method: 'DELETE',
         headers: {

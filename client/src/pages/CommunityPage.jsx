@@ -6,7 +6,7 @@ import PostCard from '../components/PostCard';
 import CreatePostModal from '../components/CreatePostModal';
 import toast from 'react-hot-toast';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
 
 export default function CommunityPage() {
   const [posts, setPosts] = useState([]);
@@ -21,7 +21,7 @@ export default function CommunityPage() {
 
   useEffect(() => {
     // Get current user
-    const userStr = localStorage.getItem('travys_user');
+    const userStr = sessionStorage.getItem('travys_user');
     if (userStr) {
       try {
         const user = JSON.parse(userStr);

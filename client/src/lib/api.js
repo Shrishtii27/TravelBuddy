@@ -5,7 +5,7 @@ const BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   (import.meta.env.PROD
     ? 'https://travelbuddybak.onrender.com'
-    : 'http://localhost:8000')
+    : 'http://localhost:8001')
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -17,7 +17,7 @@ const api = axios.create({
 
 // 🔐 Add token automatically
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('travys_token')
+  const token = sessionStorage.getItem('travys_token')
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -36,9 +36,9 @@ api.interceptors.response.use(
     ) {
       console.warn('Auth error detected, clearing tokens')
 
-      localStorage.removeItem('travys_token')
-      localStorage.removeItem('travys_user')
-      localStorage.removeItem('travys_auth')
+      sessionStorage.removeItem('travys_token')
+      sessionStorage.removeItem('travys_user')
+      sessionStorage.removeItem('travys_auth')
     }
 
     return Promise.reject(error)
