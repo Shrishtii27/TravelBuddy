@@ -169,7 +169,6 @@ export default function LoggedInDashboard() {
             </div>
           </div>
         </motion.div>
-n.div>
 
 
         {/* Main Features Grid */}
