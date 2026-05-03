@@ -119,7 +119,8 @@ export default function LoggedInDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-rose-5      {/* Main Content */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-rose-50">
+      {/* Main Content */}
       <main className="w-full">
         {/* Welcome Section */}
         <motion.div
