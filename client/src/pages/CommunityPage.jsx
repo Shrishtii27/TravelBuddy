@@ -88,18 +88,20 @@ export default function CommunityPage() {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
+      <div className="mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-rose-50 rounded-2xl">
               <Globe className="h-8 w-8 text-rose-500" />
-              Travel Community
-            </h1>
-            <p className="text-slate-600 mt-1">Share your adventures and inspire fellow travelers</p>
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Travel Community</h1>
+              <p className="text-slate-600 text-sm md:text-base">Share your adventures and inspire fellow travelers</p>
+            </div>
           </div>
           <Button
             onClick={() => setIsCreateModalOpen(true)}
-            className="gap-2"
+            className="w-full sm:w-auto gap-2 bg-rose-500 hover:bg-rose-600 h-12 rounded-xl font-bold shadow-md transition-all active:scale-95"
           >
             <Plus className="h-5 w-5" />
             Share Your Story
@@ -121,11 +123,12 @@ export default function CommunityPage() {
             </div>
 
             {/* Filter Buttons */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant={selectedFilter === 'all' ? 'default' : 'outline'}
                 onClick={() => setSelectedFilter('all')}
                 size="sm"
+                className="flex-1 sm:flex-initial h-10 px-4 rounded-xl font-semibold"
               >
                 <TrendingUp className="h-4 w-4 mr-2" />
                 All Posts
@@ -135,6 +138,7 @@ export default function CommunityPage() {
                   variant={selectedFilter === 'my-posts' ? 'default' : 'outline'}
                   onClick={() => setSelectedFilter('my-posts')}
                   size="sm"
+                  className="flex-1 sm:flex-initial h-10 px-4 rounded-xl font-semibold"
                 >
                   My Posts
                 </Button>

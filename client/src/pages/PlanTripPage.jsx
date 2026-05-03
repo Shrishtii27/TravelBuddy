@@ -340,15 +340,15 @@ export default function PlanTripPage() {
                   <Users className="w-4 h-4" />
                   Number of Travelers
                 </Label>
-                <div className="flex gap-2 mt-2">
+                <div className="flex flex-wrap gap-2 mt-2">
                   {[1, 2, 3, 4, 5, 6].map(num => (
                     <button
                       key={num}
                       onClick={() => setFormData({...formData, travelers: num})}
-                      className={`px-4 py-2 border-2 rounded-lg font-medium ${
+                      className={`flex-1 min-w-[50px] py-3 border-2 rounded-xl font-bold transition-all ${
                         formData.travelers === num
-                          ? 'border-rose-600 bg-rose-600 text-white'
-                          : 'border-slate-200 hover:border-rose-300'
+                          ? 'border-rose-600 bg-rose-600 text-white shadow-md scale-105'
+                          : 'border-slate-200 hover:border-rose-300 text-slate-700'
                       }`}
                     >
                       {num}

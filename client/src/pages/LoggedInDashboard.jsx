@@ -119,93 +119,36 @@ export default function LoggedInDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-rose-50">
-      {/* Top Navigation */}
-      <nav className="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            {/* Logo */}
-            <Link to="/app/dashboard" className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-rose-500 to-orange-500 rounded-xl p-2.5 shadow-lg">
-                <MapPin className="w-7 h-7 text-white" />
-              </div>
-              <span className="text-2xl font-extrabold text-slate-900">TravelBUDDY</span>
-            </Link>
-
-            {/* Center Navigation */}
-            <div className="hidden md:flex items-center gap-1 bg-slate-100 rounded-xl p-1">
-              <Link to="/app/plan-trip" className="px-4 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-white rounded-lg font-medium transition-all flex items-center gap-2">
-                <Sparkles className="w-4 h-4" />
-                AI Planner
-              </Link>
-              <Link to="/app/expense-tracker" className="px-4 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-white rounded-lg font-medium transition-all flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
-                Expenses
-              </Link>
-              <Link to="/app/journal" className="px-4 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-white rounded-lg font-medium transition-all flex items-center gap-2">
-                <Camera className="w-4 h-4" />
-                Journal
-              </Link>
-              <Link to="/app/community" className="px-4 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-white rounded-lg font-medium transition-all flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                Community
-              </Link>
-            </div>
-
-            {/* Right Side */}
-            <div className="flex items-center gap-3">
-              <Link to="/app/profile">
-                <div className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 rounded-xl p-2 transition-colors">
-                  <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-orange-500 rounded-full flex items-center justify-center text-white text-base font-bold shadow-md">
-                    {user?.firstName?.charAt(0).toUpperCase() || 'U'}
-                  </div>
-                  <span className="font-semibold text-slate-900 hidden sm:block">{user?.firstName || 'User'}</span>
-                </div>
-              </Link>
-              
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleLogout}
-                className="text-slate-600 hover:text-rose-600 hover:bg-rose-50 font-medium"
-              >
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-rose-5      {/* Main Content */}
+      <main className="w-full">
         {/* Welcome Section */}
         <motion.div
           initial="hidden"
           animate="visible"
           variants={fadeUp}
           transition={{ duration: 0.6 }}
-          className="mb-8"
+          className="mb-10"
         >
-          <div className="bg-gradient-to-r from-rose-500 via-orange-500 to-pink-500 rounded-3xl p-10 md:p-12 text-white relative overflow-hidden shadow-2xl">
+          <div className="bg-gradient-to-r from-rose-500 via-orange-500 to-pink-500 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden shadow-xl">
             <div className="relative z-10">
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5 }}
               >
-                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
+                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
                   <Star className="w-4 h-4 text-yellow-300" />
                   <span className="text-sm font-semibold">Premium Member</span>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-extrabold mb-3">
-                  Welcome back, {user?.firstName || 'Traveler'}! 👋
+                <h1 className="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">
+                  Welcome back,<br className="md:hidden" /> {user?.firstName || 'Traveler'}! 👋
                 </h1>
-                <p className="text-white/90 text-xl mb-8 max-w-2xl">
+                <p className="text-white/90 text-lg md:text-xl mb-8 max-w-2xl leading-relaxed">
                   Ready to plan your next incredible Indian adventure? Let's turn your travel dreams into reality!
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Link to="/app/plan-trip">
-                    <Button size="lg" className="bg-white text-rose-600 hover:bg-yellow-200 hover:text-rose-700 shadow-xl font-bold h-14 px-8">
+                  <Link to="/app/plan-trip" className="w-full sm:w-auto">
+                    <Button size="lg" className="bg-white text-rose-600 hover:bg-rose-50 shadow-xl font-bold h-14 px-8 w-full sm:w-auto transition-transform hover:scale-105 active:scale-95">
                       <Sparkles className="w-5 h-5 mr-2" />
                       Create AI Itinerary
                     </Button>
@@ -215,7 +158,7 @@ export default function LoggedInDashboard() {
             </div>
             
             {/* Background Decorative Elements */}
-            <div className="absolute right-0 top-0 w-80 h-80 opacity-10">
+            <div className="absolute -right-10 -top-10 w-64 h-64 opacity-10 hidden md:block">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
@@ -223,10 +166,9 @@ export default function LoggedInDashboard() {
                 <MapPin className="w-full h-full" />
               </motion.div>
             </div>
-            <div className="absolute left-10 bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-            <div className="absolute right-20 top-20 w-32 h-32 bg-yellow-300/20 rounded-full blur-2xl" />
           </div>
         </motion.div>
+n.div>
 
 
         {/* Main Features Grid */}

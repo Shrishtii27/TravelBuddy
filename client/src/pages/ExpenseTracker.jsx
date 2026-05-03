@@ -109,18 +109,20 @@ export default function ExpenseTracker() {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
+      <div className="mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
           <div className="flex items-center gap-3">
-            <Wallet className="h-8 w-8 text-rose-500" />
+            <div className="p-3 bg-rose-50 rounded-2xl">
+              <Wallet className="h-8 w-8 text-rose-500" />
+            </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">Expense Tracker</h1>
-              <p className="text-slate-600">Track and manage your travel expenses</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Expense Tracker</h1>
+              <p className="text-slate-600 text-sm md:text-base">Track and manage your travel expenses</p>
             </div>
           </div>
           <Button
             onClick={handleAddExpense}
-            className="gap-2"
+            className="w-full sm:w-auto gap-2 bg-rose-500 hover:bg-rose-600 h-12 rounded-xl"
           >
             <Plus className="h-5 w-5" />
             Add Expense

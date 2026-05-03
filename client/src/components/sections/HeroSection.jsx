@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
-import { Plane, MapPin, Sparkles, TrendingUp, Users, Shield, LogOut } from "lucide-react";
+import { Plane, MapPin, Sparkles, TrendingUp, Users, Shield, LogOut, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 
 const fadeUp = {
@@ -31,6 +32,7 @@ export default function HeroSection() {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     checkAuthState();
@@ -118,12 +120,12 @@ export default function HeroSection() {
               <a href="#footer" className="text-white/90 font-medium hover:text-white transition-colors">About</a>
             </div>
 
-            {/* Auth Actions */}
-            <div className="flex items-center gap-3">
+            {/* Auth Actions (Desktop) */}
+            <div className="hidden md:flex items-center gap-3">
               {isLoggedIn ? (
                 <div className="flex items-center gap-3">
                   {/* User Profile Pill */}
-                  <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
                     {currentUser?.profilePicture ? (
                       <img
                         src={currentUser.profilePicture}
@@ -142,7 +144,6 @@ export default function HeroSection() {
                     </span>
                   </div>
 
-                  {/* Dashboard Button */}
                   <Button 
                     onClick={handleDashboardClick}
                     className="bg-white text-rose-600 hover:bg-white/90 shadow-md font-semibold rounded-xl h-10 px-5"
@@ -150,7 +151,6 @@ export default function HeroSection() {
                     Dashboard
                   </Button>
 
-                  {/* Logout Button */}
                   <Button 
                     onClick={handleLogout}
                     variant="ghost" 
@@ -175,8 +175,69 @@ export default function HeroSection() {
                 </div>
               )}
             </div>
+
+            {/* Mobile Menu Toggle */}
+            <div className="md:hidden flex items-center">
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Mobile Menu Content */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden bg-white/10 backdrop-blur-lg border-t border-white/20 overflow-hidden"
+            >
+              <div className="container mx-auto px-4 py-6 flex flex-col gap-4">
+                <a href="#features" onClick={() => setIsMenuOpen(false)} className="text-white/90 font-medium hover:text-white py-2">Features</a>
+                <a href="#popular" onClick={() => setIsMenuOpen(false)} className="text-white/90 font-medium hover:text-white py-2">Destinations</a>
+                <a href="#footer" onClick={() => setIsMenuOpen(false)} className="text-white/90 font-medium hover:text-white py-2">About</a>
+                
+                <div className="pt-4 border-t border-white/10 flex flex-col gap-3">
+                  {isLoggedIn ? (
+                    <>
+                      <div className="flex items-center gap-3 px-3 py-2 bg-white/5 rounded-xl">
+                        {currentUser?.profilePicture ? (
+                          <img src={currentUser.profilePicture} className="h-8 w-8 rounded-full" alt="Profile" />
+                        ) : (
+                          <div className="h-8 w-8 rounded-full bg-rose-500 flex items-center justify-center font-bold text-white text-xs">
+                            {currentUser?.firstName?.charAt(0)?.toUpperCase()}
+                          </div>
+                        )}
+                        <span className="text-white font-medium">{currentUser?.firstName}</span>
+                      </div>
+                      <Button onClick={handleDashboardClick} className="bg-white text-rose-600 w-full justify-center">
+                        Dashboard
+                      </Button>
+                      <Button onClick={handleLogout} variant="ghost" className="text-white/80 w-full justify-center">
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Logout
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                        <Button variant="ghost" className="text-white/80 w-full justify-center">Login</Button>
+                      </Link>
+                      <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
+                        <Button className="bg-white text-rose-600 w-full justify-center">Get Started</Button>
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.nav>
 
       {/* Main Hero Content */}

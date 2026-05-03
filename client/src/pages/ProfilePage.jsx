@@ -169,41 +169,49 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile Content */}
-        <div className="pt-20 pb-6 px-8">
-          <div className="flex items-start justify-between mb-8">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900">
+        <div className="pt-20 pb-8 px-6 md:px-10">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 mb-10 text-center sm:text-left">
+            <div className="flex-1 w-full">
+              <h2 className="text-3xl font-extrabold text-slate-900 leading-tight">
                 {user.firstName} {user.lastName || ''}
               </h2>
-              <p className="text-slate-600 flex items-center gap-2 mt-1">
-                <Mail className="h-4 w-4" />
+              <p className="text-slate-600 flex items-center justify-center sm:justify-start gap-2 mt-2 text-lg">
+                <Mail className="h-5 w-5 text-rose-500" />
                 {user.email}
               </p>
             </div>
             
-            {!isEditing ? (
-              <Button onClick={() => setIsEditing(true)}>
-                Edit Profile
-              </Button>
-            ) : (
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handleCancel}
-                  disabled={saving}
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              {!isEditing ? (
+                <Button 
+                  onClick={() => setIsEditing(true)}
+                  className="w-full sm:w-auto bg-rose-500 hover:bg-rose-600 h-12 px-8 rounded-xl font-bold shadow-md transition-all active:scale-95"
                 >
-                  <X className="h-4 w-4 mr-2" />
-                  Cancel
+                  <UserIcon className="h-4 w-4 mr-2" />
+                  Edit Profile
                 </Button>
-                <Button
-                  onClick={handleSave}
-                  disabled={saving}
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </Button>
-              </div>
-            )}
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={handleCancel}
+                    disabled={saving}
+                    className="w-full sm:w-auto h-12 px-6 rounded-xl border-slate-200 font-bold"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="w-full sm:w-auto bg-rose-500 hover:bg-rose-600 h-12 px-8 rounded-xl font-bold shadow-md transition-all active:scale-95"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {saving ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Profile Information */}
