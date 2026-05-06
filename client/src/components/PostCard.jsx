@@ -192,19 +192,28 @@ export default function PostCard({ post, onLike, onComment, onDelete, currentUse
       {localPost.images && localPost.images.length > 0 && (
         <div className={cn(
           "grid gap-1 px-4 pb-3",
-          localPost.images.length === 1 && "grid-cols-1",
-          localPost.images.length === 2 && "grid-cols-2",
-          localPost.images.length >= 3 && "grid-cols-3"
+          localPost.images.length === 1 ? "grid-cols-1" : 
+          localPost.images.length === 2 ? "grid-cols-2" : "grid-cols-3"
         )}>
           {localPost.images.slice(0, 6).map((img, idx) => (
-            <div key={idx} className="relative aspect-square overflow-hidden rounded-lg">
+            <div 
+              key={idx} 
+              className={cn(
+                "relative overflow-hidden rounded-xl border border-slate-100 bg-slate-50",
+                localPost.images.length === 1 ? "aspect-auto max-h-[500px]" : "aspect-square"
+              )}
+            >
               <img
                 src={img.url}
                 alt={img.caption || `Image ${idx + 1}`}
-                className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                className={cn(
+                  "w-full transition-transform duration-500 hover:scale-105 cursor-pointer",
+                  localPost.images.length === 1 ? "h-auto max-h-[500px] object-contain mx-auto" : "h-full object-cover"
+                )}
+                onClick={() => window.open(img.url, '_blank')}
               />
               {idx === 5 && localPost.images.length > 6 && (
-                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center pointer-events-none">
                   <span className="text-white font-bold text-xl">+{localPost.images.length - 6}</span>
                 </div>
               )}

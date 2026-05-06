@@ -63,7 +63,7 @@ export default function SignupPage() {
           color: '#fff',
         },
       });
-      navigate('/app/dashboard');
+      navigate('/');
     } catch (err) {
       const msg = err.response?.data?.message || 'Signup failed. Please try again.';
       setError(msg);

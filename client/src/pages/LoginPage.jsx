@@ -66,7 +66,7 @@ export default function LoginPage() {
         },
       });
       
-      navigate('/app/dashboard');
+      navigate('/');
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Login failed. Please try again.';
       setError(errorMessage);

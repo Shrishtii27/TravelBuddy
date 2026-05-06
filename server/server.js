@@ -30,7 +30,9 @@ const ORIGIN = process.env.FRONTEND_URL || 'http://localhost:5176'
 console.log('🔧 Setting up server...')
 
 // Middleware
-app.use(helmet())
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+}))
 app.use(cors({ 
   origin: ORIGIN, 
   credentials: true,

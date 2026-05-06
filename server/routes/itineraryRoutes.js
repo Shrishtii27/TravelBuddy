@@ -1,42 +1,47 @@
 import express from "express";
-import OpenAI from "openai";
 import { authenticateToken } from "../middleware/auth.js";
 import { buildUserPrompt } from "../ai/itineraryEngine.js";
 import { MASTER_SYSTEM_PROMPT } from "../ai/masterPrompt.js";
 import { enforceCostVariation } from "../ai/costVariationEngine.js";
 import { generateMockItinerary } from "../ai/mockGenerator.js";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import pool from "../config/postgres.js";
 
 const router = express.Router();
 
-const USE_MOCK = false; 
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ 
+  model: "gemini-1.5-flash",
+  systemInstruction: MASTER_SYSTEM_PROMPT, // This forces the AI to always obey the Master Prompt
+  generationConfig: {
+    responseMimeType: "application/json",
+    temperature: 0.7,
+  }
 });
 
 router.post("/generate", authenticateToken, async (req, res) => {
   try {
     let itineraryData;
 
-    if (USE_MOCK) {
-      itineraryData = generateMockItinerary(req.body);
-    } else {
+    try {
       const userPrompt = buildUserPrompt(req.body);
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        temperature: 0.3,
-        messages: [
-          { role: "system", content: MASTER_SYSTEM_PROMPT },
-          { role: "user", content: userPrompt }
-        ],
-        response_format: { type: "json_object" }
-      });
-
-      let rawContent = response.choices[0].message.content.trim();
-      rawContent = rawContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      itineraryData = JSON.parse(rawContent);
+      
+      console.log("🚀 Generating with Gemini (System Instruction Mode)...");
+      const result = await model.generateContent(userPrompt);
+      const response = await result.response;
+      let text = response.text();
+      
+      // Clean up the response text in case of markdown fences
+      text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      
+      itineraryData = JSON.parse(text);
       itineraryData = enforceCostVariation(itineraryData);
+      console.log("✅ Gemini generation successful");
+    } catch (aiError) {
+      console.error("⚠️ Gemini Generation failed, falling back to mock:", aiError.message);
+      itineraryData = generateMockItinerary(req.body);
+      itineraryData.is_mock = true;
     }
 
     // Save to database

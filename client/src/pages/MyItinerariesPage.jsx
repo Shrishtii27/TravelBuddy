@@ -36,7 +36,7 @@ export default function MyItinerariesPage() {
       const response = await api.delete(`/api/itinerary/${id}`);
       if (response.data.success) {
         toast.success('Itinerary deleted');
-        setItineraries(itineraries.filter(item => item._id !== id));
+        setItineraries(itineraries.filter(item => item.id !== id));
       }
     } catch (error) {
       console.error('Error deleting itinerary:', error);
@@ -49,7 +49,7 @@ export default function MyItinerariesPage() {
       const response = await api.patch(`/api/itinerary/${id}/favorite`);
       if (response.data.success) {
         setItineraries(itineraries.map(item => 
-          item._id === id ? { ...item, isFavorite: response.data.isFavorite } : item
+          item.id === id ? { ...item, is_favorite: response.data.isFavorite } : item
         ));
         toast.success(response.data.isFavorite ? 'Added to favorites' : 'Removed from favorites');
       }
@@ -60,7 +60,7 @@ export default function MyItinerariesPage() {
   };
 
   const viewItinerary = (itinerary) => {
-    navigate('/app/itinerary', { state: itinerary.itineraryData });
+    navigate('/app/itinerary', { state: itinerary.itinerary_data });
   };
 
   if (loading) {
@@ -105,12 +105,12 @@ export default function MyItinerariesPage() {
           {itineraries.map((itinerary) => (
             <Card key={itinerary._id} className="hover:shadow-lg transition-shadow relative">
               <button
-                onClick={() => toggleFavorite(itinerary._id)}
+                onClick={() => toggleFavorite(itinerary.id)}
                 className="absolute top-4 right-4 z-10"
               >
                 <Heart 
                   className={`w-6 h-6 ${
-                    itinerary.isFavorite 
+                    itinerary.is_favorite 
                       ? 'fill-rose-600 text-rose-600' 
                       : 'text-slate-400 hover:text-rose-600'
                   }`}
@@ -125,9 +125,9 @@ export default function MyItinerariesPage() {
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center gap-2 text-sm text-slate-600">
                     <Calendar className="w-4 h-4" />
-                    <span>{itinerary.totalDays} days</span>
+                    <span>{itinerary.total_days} days</span>
                     <span className="mx-2">•</span>
-                    <span>{new Date(itinerary.startDate).toLocaleDateString('en-IN')}</span>
+                    <span>{new Date(itinerary.start_date).toLocaleDateString('en-IN')}</span>
                   </div>
 
                   <div className="flex items-center gap-2 text-sm text-slate-600">
@@ -136,7 +136,7 @@ export default function MyItinerariesPage() {
                   </div>
 
                   <div className="text-xs text-slate-500">
-                    Created {new Date(itinerary.createdAt).toLocaleDateString('en-IN')}
+                    Created {new Date(itinerary.created_at).toLocaleDateString('en-IN')}
                   </div>
                 </div>
 
@@ -150,7 +150,7 @@ export default function MyItinerariesPage() {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => deleteItinerary(itinerary._id)}
+                    onClick={() => deleteItinerary(itinerary.id)}
                     className="text-red-600 hover:bg-red-50"
                   >
                     <Trash2 className="w-4 h-4" />

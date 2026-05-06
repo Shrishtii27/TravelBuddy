@@ -28,6 +28,10 @@ export default function JournalForm({ onJournalCreated }) {
       return;
     }
 
+    // Generate local previews for instant feedback
+    const localPreviews = files.map(file => URL.createObjectURL(file));
+    setImages(prev => [...prev, ...localPreviews]);
+
     setUploadingImages(true);
 
     try {
@@ -48,14 +52,23 @@ export default function JournalForm({ onJournalCreated }) {
       if (response.ok) {
         const data = await response.json();
         const fullUrls = data.images.map(url => `${API_URL}${url}`);
-        setImages([...images, ...fullUrls]);
+        
+        // Replace local Blob URLs with actual server URLs
+        setImages(prev => {
+          const filtered = prev.filter(img => !img.startsWith('blob:'));
+          return [...filtered, ...fullUrls];
+        });
+        
         toast.success(`${files.length} image(s) uploaded!`);
       } else {
+        // Cleanup local previews on failure
+        setImages(prev => prev.filter(img => !img.startsWith('blob:')));
         const data = await response.json();
         toast.error(data.message || 'Failed to upload images');
       }
     } catch (error) {
       console.error('Error uploading images:', error);
+      setImages(prev => prev.filter(img => !img.startsWith('blob:')));
       toast.error('Failed to upload images');
     } finally {
       setUploadingImages(false);

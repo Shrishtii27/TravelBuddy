@@ -119,6 +119,12 @@ const ProtectedRoute = ({ children }) => {
   return isAuth ? children : <Navigate to="/" replace />
 }
 
+// Public Route Component that redirects to home if already authenticated
+const PublicRoute = ({ children }) => {
+  const token = sessionStorage.getItem('travys_token');
+  return token ? <Navigate to="/" replace /> : children;
+}
+
 function RouteError() {
   // React Router error boundary component for better UX
   return (
@@ -141,8 +147,22 @@ const router = createBrowserRouter([
     errorElement: <RouteError />,
     children: [
       { index: true, element: <LandingPage /> },
-      { path: 'login', element: <LoginPage /> },
-      { path: 'signup', element: <SignupPage /> },
+      { 
+        path: 'login', 
+        element: (
+          <PublicRoute>
+            <LoginPage />
+          </PublicRoute>
+        ) 
+      },
+      { 
+        path: 'signup', 
+        element: (
+          <PublicRoute>
+            <SignupPage />
+          </PublicRoute>
+        ) 
+      },
       { path: 'auth/callback', element: <AuthCallback /> },
       {
         path: 'app',

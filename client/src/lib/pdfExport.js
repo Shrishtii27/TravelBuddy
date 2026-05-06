@@ -92,13 +92,23 @@ export function exportToPDF(itinerary) {
     if (budget_breakdown.food) {
       budgetData.push(['Food', budget_breakdown.food.total, budget_breakdown.food.per_day_avg]);
     }
-    if (budget_breakdown.activities) {
-      budgetData.push(['Activities', budget_breakdown.activities.total, budget_breakdown.activities.per_day_avg]);
+    
+    // Support both new 'activities_entry_fees' and old 'activities'
+    const actData = budget_breakdown.activities_entry_fees || budget_breakdown.activities;
+    if (actData) {
+      budgetData.push(['Activities', actData.total, actData.per_day_avg]);
     }
+
+    // Support both new and old transport format
     if (budget_breakdown.transport) {
-      budgetData.push(['Transport', `Intercity: ${budget_breakdown.transport.intercity} | Local: ${budget_breakdown.transport.local}`, '-']);
+      const intercity = budget_breakdown.transport.intercity_total || budget_breakdown.transport.intercity;
+      const local = budget_breakdown.transport.local_total || budget_breakdown.transport.local;
+      budgetData.push(['Transport', `Intercity: ${intercity} | Local: ${local}`, '-']);
     }
-    budgetData.push(['Total', budget_breakdown.total_estimated, '']);
+
+    // Support both new and old total keys
+    const finalTotal = budget_breakdown.grand_total_budget_scenario || budget_breakdown.total_estimated;
+    budgetData.push(['Total', finalTotal, '']);
   }
 
   doc.autoTable({

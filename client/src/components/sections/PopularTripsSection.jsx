@@ -282,7 +282,7 @@ export default function PopularTripsSection() {
                       <MapPin className="w-4 h-4" />
                       Itinerary Included
                     </span>
-                    <Link to="/signup">
+                    <Link to={isLoggedIn ? "/app/dashboard" : "/signup"}>
                       <span className="text-rose-600 font-semibold hover:text-rose-700 flex items-center gap-1">
                         View Details
                         <ArrowRight className="w-4 h-4" />
@@ -296,7 +296,7 @@ export default function PopularTripsSection() {
         </motion.div>
 
         <div className="text-center mt-12">
-          <Link to="/signup">
+          <Link to={isLoggedIn ? "/app/dashboard" : "/signup"}>
             <Button size="lg" variant="outline" className="border-2 border-rose-500 text-rose-600 hover:bg-rose-50 font-bold">
               View All Destinations
               <ArrowRight className="w-5 h-5 ml-2" />
